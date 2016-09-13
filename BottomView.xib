@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10116" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <capability name="Alignment constraints to the first baseline" minToolsVersion="6.0"/>
+        <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="BottomView" customModule="ARAttempt" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BYB-X7-eug">
+                    <rect key="frame" x="69" y="9" width="70" height="32"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="70" id="Cx0-sS-olg"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="AvenirNext-Bold" family="Avenir Next" pointSize="15"/>
+                    <state key="normal" title="Rate">
+                        <color key="titleColor" red="0.99074727296829224" green="0.93649297952651978" blue="0.0090319756418466568" alpha="0.97999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cLc-Jh-eFX">
+                    <rect key="frame" x="180" y="9" width="70" height="32"/>
+                    <fontDescription key="fontDescription" name="AvenirNext-Bold" family="Avenir Next" pointSize="15"/>
+                    <state key="normal" title="Share">
+                        <color key="titleColor" red="0.99074727296829224" green="0.93649297952651978" blue="0.0090319756418466568" alpha="0.97999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                </button>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="cLc-Jh-eFX" firstAttribute="baseline" secondItem="BYB-X7-eug" secondAttribute="firstBaseline" id="1Q9-Pb-yxq"/>
+                <constraint firstItem="cLc-Jh-eFX" firstAttribute="leading" secondItem="BYB-X7-eug" secondAttribute="trailing" constant="41" id="4c7-Ss-siZ"/>
+                <constraint firstAttribute="trailing" secondItem="cLc-Jh-eFX" secondAttribute="trailing" constant="70" id="96V-1S-CTh"/>
+                <constraint firstItem="BYB-X7-eug" firstAttribute="baseline" secondItem="cLc-Jh-eFX" secondAttribute="firstBaseline" id="Lnp-ag-zn4"/>
+                <constraint firstItem="BYB-X7-eug" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="69" id="bMQ-BX-SoR"/>
+                <constraint firstItem="BYB-X7-eug" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="gbG-CF-hmD"/>
+                <constraint firstItem="BYB-X7-eug" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="9" id="lTo-rF-WsZ"/>
+                <constraint firstItem="BYB-X7-eug" firstAttribute="top" secondItem="cLc-Jh-eFX" secondAttribute="top" id="mYV-tn-z1V"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+        </view>
+    </objects>
+</document>

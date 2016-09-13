@@ -1,0 +1,90 @@
+//        let screenTap = UITapGestureRecognizer(target: self, action: "createBall:")
+//        screenTap.numberOfTapsRequired = 1
+//        self.scnView!.addGestureRecognizer(screenTap)
+
+//boingBallNode!.position = SCNVector3(x: 0, y: 0, z: -7)
+
+//let projectedOrigin = self.scnView!.projectPoint(SCNVector3Zero)
+//let vp = touch.locationInView(scnView!)
+//let vpWithZ = SCNVector3(x: Float(vp.x), y: Float(vp.y), z: projectedOrigin.z)
+//let worldPoint = self.scnView!.unprojectPoint(vpWithZ)
+
+//boingBallNode!.position = SCNVector3(x: worldPoint.x, y: worldPoint.y, z: -7)
+//boingBallNode!.position = worldPoint
+//let touchPoint = touch.locationInView(self.view)
+
+
+func placeDasModel(touch: UITapGestureRecognizer) {
+print("hiii")
+//        let touchPoint = touch .locationInView(self.view)
+//        let DynamicView = UIView(frame: CGRectMake(touchPoint.x, touchPoint.y, 100, 100))
+//        DynamicView.backgroundColor=UIColor.greenColor()
+//        DynamicView.layer.cornerRadius=25
+//        DynamicView.layer.borderWidth=2
+//        self.view.addSubview(DynamicView)
+//
+//        self.createBall()
+//        boingBallNode!.position = SCNVector3(x: Float(touchPoint.x), y: Float(touchPoint.y), z: -7)
+//scene!.rootNode.addChildNode(boingBallNode!)
+
+}
+
+
+// Make the ball fly
+//            let animation = CABasicAnimation(keyPath: "position.z")
+//            animation.byValue = 130.0
+//            animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionDefault)
+//            animation.autoreverses = false
+//            animation.repeatCount = 0
+//            animation.duration = 4.5
+//            boingBallNode!.addAnimation(animation, forKey: "fly1")
+
+//            speed = speed! - 0.01;
+//            nodeTimer?.fireDate = nodeTimer!.fireDate.dateByAddingTimeInterval(Double(speed!))
+
+//        self.highScoreLabel = UILabel()
+//        self.highScoreLabel?.frame = CGRectMake(0,10, self.view.frame.size.width, 40)
+//        self.highScoreLabel?.textColor = UIColor.whiteColor()
+//        self.highScoreLabel?.textAlignment = NSTextAlignment.Center
+//        self.highScoreLabel?.font = UIFont(name: "AvenirNext-Heavy", size: 20.0)
+//
+//        self.highScoreLabel?.text = "high score: \(highScore!)"
+//        self.highScoreLabel?.alpha = 0.88
+//        self.view.addSubview(self.highScoreLabel!)
+
+
+//        let colorView = UIView()
+//        colorView.backgroundColor = UIColor.whiteColor()//UIColor(red:0.4, green:0.65, blue:0.88, alpha:1.0)
+//        colorView.frame = CGRectMake(50, 156, self.view.frame.size.width-100, self.scrollView!.frame.size.height/2+10)
+//        colorView.layer.cornerRadius = 20
+//        colorView.alpha = 1.0
+//        self.scrollView!.addSubview(colorView)
+
+//self.highScoreButton.layer.cornerRadius = 8
+//self.highScoreButton.setTitle("high score: \(highScore!)", forState: UIControlState.Normal)
+//self.view.bringSubviewToFront(self.highScoreButton)
+//self.highScoreButton?.hidden = true
+
+//            let tappableSphereNode = SCNSphere(radius: 2.5)
+//            tappableNode = SCNNode(geometry: tappableSphereNode)
+//            tappableNode?.addChildNode(boingBallNode!)
+//            //tappableNode?.position = (boingBallNode?.position)!
+//            let material2 = SCNMaterial()
+//            material2.specular.contents = UIColor.clearColor()
+//            material2.diffuse.contents = UIColor.clearColor()
+//            material2.shininess = 1.0
+//            tappableSphereNode.materials = [ material2 ]
+
+//scene!.rootNode.addChildNode(tappableNode!)
+
+let imageview = UIImageView()
+imageview.frame = CGRectMake(0, 0, 64, 64)
+imageview.center = self.view.center
+imageview.image = UIImage(named: "fingerTap")
+imageview.alpha = 0.0
+self.view.addSubview(imageview)
+
+
+//            pumpkin = pumpkinScene?.rootNode.childNodeWithName("Pumpkin", recursively: false)!
+//            let newNode = pumpkin!.copy() as! SCNNode;
+//            scene!.rootNode.addChildNode(newNode)
