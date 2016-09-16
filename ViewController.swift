@@ -7,7 +7,8 @@
 //
 
 import UIKit
-import CameraEngine
+//import CameraEngine
+import Foundation
 import SceneKit
 import CoreMotion
 import SpriteKit
@@ -26,9 +27,13 @@ func radiansToDegrees(radians: Float) -> Float {
     return (180.0/Float(M_PI)) * radians
 }
 
-class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsContactDelegate, UIScrollViewDelegate, GADInterstitialDelegate, GADBannerViewDelegate {
+class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsContactDelegate, UIScrollViewDelegate, GADInterstitialDelegate, GADBannerViewDelegate, CZPickerViewDelegate, CZPickerViewDataSource {
     
-    let cameraEngine = CameraEngine()
+    var captureSession: AVCaptureSession?
+    var stillImageOutput: AVCaptureStillImageOutput?
+    var previewLayer: AVCaptureVideoPreviewLayer?
+    
+    //let cameraEngine = CameraEngine()
     var i = 1
     var motionManager : CMMotionManager?
     var boingBallNode : SCNNode?
@@ -54,6 +59,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     var levelView : LevelView?
     var bottomView : BottomView?
     var iPhone4StartButton : UIButton?
+    var liveLeaderBoardButton : UIButton?
     
     var topArrow : UIImageView?
     var bottomArrow : UIImageView?
@@ -64,6 +70,9 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     var appRunning : Bool?
     var popup: GADInterstitial!
     var appDelegate : AppDelegate?
+    var picker : CZPickerView?
+    
+    var highScoreUsers : NSMutableArray?
     
     @IBOutlet weak var customLevelView: LevelView!
     @IBOutlet weak var pageControl: UIPageControl!
@@ -73,7 +82,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        self.appDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
         
         tapCount = 0
         speed = 1
@@ -106,13 +115,14 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         leftArrow?.alpha = 0.0
 
         // Create Camera
-        self.cameraEngine.startSession()
+        //self.cameraEngine.startSession()
+        self.setupCameraBackground()
         
         // Create Scene
         scene = SCNScene()
         scene?.physicsWorld.contactDelegate = self
         
-        pumpkinScene = SCNScene(named: "art.scnassets/pineapple.scn")!
+        pumpkinScene = SCNScene(named: "art.scnassets/TrumpBallFinal.scn")!
         
         let newView = SCNView()
         newView.delegate = self
@@ -143,11 +153,9 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         self.setupScrollViewAndLevels()
         
-        // levels - forrrr loop :)
-        // rate
-        // share
-        
         popup = createAndLoadInterstitial()
+        
+        self.getLeaderboardHighScores()
         
     }
     
@@ -287,7 +295,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             
             iPhone4StartButton = UIButton()
             iPhone4StartButton?.frame = CGRectMake(self.view.frame.size.width/2-50, self.view.frame.size.height/2+82, 100, 100)
-            iPhone4StartButton?.backgroundColor = UIColor(red:0.4, green:0.65, blue:0.88, alpha:1.0)
+            iPhone4StartButton?.backgroundColor = UIColor(red:0.98, green:0.39, blue:0.37, alpha:1.0)
             iPhone4StartButton?.titleLabel?.font = UIFont(name: "AvenirNext-Heavy", size: 24.0)
             iPhone4StartButton?.setTitle("start", forState: UIControlState.Normal)
             iPhone4StartButton!.layer.cornerRadius = (iPhone4StartButton?.frame.size.width)!/2
@@ -377,6 +385,283 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
 //        self.view.addSubview(self.bottomView!)
 //        self.view.bringSubviewToFront(self.bottomView!)
         
+       
+        if UIScreen.mainScreen().bounds.size.height < 568.0 {
+            
+        } else {
+            
+            liveLeaderBoardButton = UIButton()
+            liveLeaderBoardButton!.frame = CGRectMake(0, self.view.frame.size.height-84, self.view.frame.size.width, 40)
+            liveLeaderBoardButton!.setTitle("high scores 🌟", forState: UIControlState.Normal)
+            liveLeaderBoardButton!.titleLabel?.font = UIFont(name: "AvenirNext-Bold", size: 16.0)
+//            liveLeaderBoardButton!.setTitleColor(UIColor(red:0.98, green:0.39, blue:0.37, alpha:0.70), forState: UIControlState.Normal)
+//            liveLeaderBoardButton!.setTitleColor(UIColor(red:0.98, green:0.39, blue:0.37, alpha:0.25), forState: UIControlState.Highlighted)
+            
+            liveLeaderBoardButton!.setTitleColor(UIColor.whiteColor().colorWithAlphaComponent(0.8), forState: UIControlState.Normal)
+            liveLeaderBoardButton!.setTitleColor(UIColor.whiteColor().colorWithAlphaComponent(0.3), forState: UIControlState.Highlighted)
+            
+            liveLeaderBoardButton!.addTarget(self, action: #selector(showAlert), forControlEvents: UIControlEvents.TouchUpInside)
+            liveLeaderBoardButton?.alpha = 0.8
+            self.view.addSubview(liveLeaderBoardButton!)
+            self.view.bringSubviewToFront(liveLeaderBoardButton!)
+
+        }
+        
+    }
+    
+    func showAlert() {
+        
+        let hasReviewedApp = NSUserDefaults.standardUserDefaults().objectForKey("hasReviewedApp")
+        
+        if hasReviewedApp != nil {
+            self.showLiveLeaderBoard()
+        } else {
+            let alertController = UIAlertController(title: "🔒🔒🔒", message: "Leave us a review in the app store to unlock the worldwide leaderboard and to submit your best score!", preferredStyle:UIAlertControllerStyle.Alert)
+            
+            alertController.addAction(UIAlertAction(title: "Review", style: UIAlertActionStyle.Default)
+            { action -> Void in
+                // Put your code here
+                self.appDelegate?.userLeftAppFromReviewButton = true
+                UIApplication.sharedApplication().openURL(NSURL(string: "https://itunes.apple.com/us/app/blow-up-trump/id1154248528?ls=1&mt=8")!)
+                
+            })
+            
+            alertController.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel)
+            { action -> Void in
+                // Put your code here
+                })
+            self.presentViewController(alertController, animated: true, completion: nil)
+        }
+    
+        
+    }
+    
+    func showLiveLeaderBoard () {
+        
+        let username = NSUserDefaults.standardUserDefaults().objectForKey("username")
+        if username == nil {
+            self.showCreateUsernameAlert()
+        } else {
+            
+            //self.getLeaderboardHighScores()
+            self.showLeaderBoard()
+        }
+    }
+    
+    func showLeaderBoard () {
+        
+        if self.highScoreUsers?.count < 8 {
+          return
+        }
+        
+        self.picker = CZPickerView(headerTitle: "high scores", cancelButtonTitle: "cancel", confirmButtonTitle: "confirm")
+        self.picker!.delegate = self
+        self.picker!.dataSource = self
+        self.picker!.show()
+
+    }
+    
+    func getLeaderboardHighScores () {
+        
+//        UIView.animateWithDuration(0.15, animations: {
+//            self.liveLeaderBoardButton?.alpha = 0.0
+//        }) { (true) in
+//        }
+
+//        let activityView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.White)
+//        activityView.frame = CGRectMake(self.view.frame.size.width/2-25, self.view.frame.size.height-84, 50, 50)
+//        activityView.startAnimating()
+//        self.view.addSubview(activityView)
+//        self.view.bringSubviewToFront(activityView)
+//        
+//        liveLeaderBoardButton?.enabled = false
+        
+        self.highScoreUsers = NSMutableArray()
+        
+        let query = PFQuery(className: "CustomUser")
+        query.whereKeyExists("username")
+        query.orderByDescending("userHighScore")
+        query.limit = 8
+        query.findObjectsInBackgroundWithBlock { (objects: [PFObject]?, error: NSError?) in
+            if error == nil {
+                // The find succeeded.
+                print("Successfully retrieved \(objects!.count) scores.")
+                // Do something with the found objects
+                if let objects = objects {
+                    for object in objects {
+                        let usernameString = object.objectForKey("username") as! String
+                        let userHighScore = object.objectForKey("userHighScore") as! NSNumber
+                        let stringTemp = String(userHighScore)
+                        let combinedString = usernameString + " - " + stringTemp
+                        self.highScoreUsers?.addObject(combinedString)
+                        self.liveLeaderBoardButton?.enabled = true
+                        
+                        UIView.animateWithDuration(0.15, animations: {
+                            //activityView.hidden = true
+                            self.liveLeaderBoardButton?.alpha = 0.80
+                        }) { (true) in
+                            
+                        }
+
+                        
+                    }
+                } else {
+                    self.liveLeaderBoardButton?.enabled = true
+                    UIView.animateWithDuration(0.15, animations: {
+                        //activityView.hidden = true
+                        self.liveLeaderBoardButton?.alpha = 0.80
+                    }) { (true) in
+                    }
+                    self.showUnknownError()
+                    
+                }
+                //print(self.highScoreUsers)
+                
+                // CHANGEE
+                //self.showLeaderBoard()
+                
+            } else {
+                // Log details of the failure
+                print("Error: \(error!) \(error!.userInfo)")
+                UIView.animateWithDuration(0.15, animations: {
+                    //activityView.hidden = true
+                    self.liveLeaderBoardButton?.alpha = 0.80
+                }) { (true) in
+                }
+                self.showUnknownError()
+            }
+        }
+    }
+    
+    
+    func showUnknownError () {
+        
+        let alertController = UIAlertController(title: "server error", message: "an unknown error occurred, please try again.", preferredStyle:UIAlertControllerStyle.Alert)
+        
+        alertController.addAction(UIAlertAction(title: "ok", style: UIAlertActionStyle.Cancel)
+        { action -> Void in
+            // save user username to db
+        })
+        
+        self.presentViewController(alertController, animated: true, completion: nil)
+
+    }
+    
+    func showCreateUsernameAlert () {
+        
+        let alertController = UIAlertController(title: "create username", message: "Create a username to show off your high score!", preferredStyle:UIAlertControllerStyle.Alert)
+        
+        alertController.addAction(UIAlertAction(title: "save", style: UIAlertActionStyle.Default)
+        { action -> Void in
+            // save user username to db
+            let usernameTextFieldString = alertController.textFields?.first?.text
+            self.saveUsernameInParse(usernameTextFieldString!)
+        })
+        
+        alertController.addTextFieldWithConfigurationHandler { (textField : UITextField!) -> Void in
+            textField.placeholder = "create username"
+
+        }
+        
+        self.presentViewController(alertController, animated: true, completion: nil)
+
+    }
+    
+    func saveUsernameInParse (username: String) {
+        
+        let query = PFQuery(className: "CustomUser")
+        query.whereKey("username", equalTo: username)
+        query.getFirstObjectInBackgroundWithBlock {
+            (object: PFObject?, error: NSError?) -> Void in
+            
+            if object != nil {
+                // username already exists
+                self.showError()
+                return
+            }
+            if error != nil || object == nil {
+                // username doesnt exists, create it
+                
+                if self.appDelegate?.currentUser == nil {
+                    // SHOW ERROR
+                    print("ERRORROROR!")
+                    
+                } else {
+                    
+                    self.appDelegate?.currentUser?.setObject(username, forKey: "username")
+                    self.appDelegate?.currentUser?.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            NSUserDefaults.standardUserDefaults().setObject(username, forKey: "username")
+                            NSUserDefaults.standardUserDefaults().synchronize()
+                            self.showLiveLeaderBoard()
+                        }
+                    }
+
+                }                
+            }
+        }
+    }
+    
+    func showError () {
+        
+        let alertController = UIAlertController(title: "error", message: "that username already exists.", preferredStyle:UIAlertControllerStyle.Alert)
+        
+        alertController.addAction(UIAlertAction(title: "ok", style: UIAlertActionStyle.Cancel)
+        { action -> Void in
+            // save user username to db
+            self.showCreateUsernameAlert()
+        })
+        
+        self.presentViewController(alertController, animated: true, completion: nil)
+    }
+    
+
+    func numberOfRowsInPickerView(pickerView: CZPickerView) -> Int {
+        return 8
+    }
+    
+    func czpickerView(pickerView: CZPickerView, titleForRow row: Int) -> String {
+        
+        switch row {
+        case 0:
+            
+            let combinedString = "🌟  " + ((self.highScoreUsers?.objectAtIndex(0))! as! String) + "  🌟"            
+            return combinedString
+            
+        case 1:
+            return (self.highScoreUsers?.objectAtIndex(1))! as! String
+            
+        case 2:
+            return (self.highScoreUsers?.objectAtIndex(2))! as! String
+            
+        case 3:
+            return (self.highScoreUsers?.objectAtIndex(3))! as! String
+            
+        case 4:
+            return (self.highScoreUsers?.objectAtIndex(4))! as! String
+            
+        case 5:
+            return (self.highScoreUsers?.objectAtIndex(5))! as! String
+
+        case 6:
+            return (self.highScoreUsers?.objectAtIndex(6))! as! String
+
+        case 7:
+            return (self.highScoreUsers?.objectAtIndex(7))! as! String
+
+        case 8:
+            return (self.highScoreUsers?.objectAtIndex(8))! as! String
+
+        case 9:
+            return (self.highScoreUsers?.objectAtIndex(9))! as! String
+            
+        case 10:
+            return (self.highScoreUsers?.objectAtIndex(10))! as! String
+        
+        default:
+            return "null"
+        }
     }
     
     func shareMedia () {
@@ -441,6 +726,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     
     override func viewWillAppear(animated: Bool) {
         
+        //self.setupCameraBackground()
+        
         if appRunning == true {
             return
         } else {
@@ -458,6 +745,38 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             }
         }
     }
+    
+    func setupCameraBackground () {
+        captureSession = AVCaptureSession()
+        //captureSession?.sessionPreset = AVCaptureSessionPresetPhoto
+        //let backCamera = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
+        let backCamera = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        
+        var error: NSError?
+        var input: AVCaptureDeviceInput!
+        do {
+            input = try AVCaptureDeviceInput(device: backCamera)
+        } catch let error1 as NSError {
+            error = error1
+            input = nil
+        }
+        
+        if error == nil && captureSession!.canAddInput(input) {
+            captureSession!.addInput(input)
+            stillImageOutput = AVCaptureStillImageOutput()
+            stillImageOutput!.outputSettings = [AVVideoCodecKey: AVVideoCodecJPEG]
+            if captureSession!.canAddOutput(stillImageOutput) {
+                captureSession!.addOutput(stillImageOutput)
+                previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+                previewLayer!.videoGravity = AVLayerVideoGravityResizeAspectFill
+                previewLayer!.connection?.videoOrientation = AVCaptureVideoOrientation.Portrait
+                previewLayer!.frame = self.view.frame
+                self.view.layer.addSublayer(previewLayer!)
+                captureSession!.startRunning()
+            }
+        }
+    }
+
     
     func setupLabelsAndButtons () {
         
@@ -488,7 +807,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         self.highScoreLabel?.textAlignment = NSTextAlignment.Center
         self.highScoreLabel?.font = UIFont(name: "AvenirNext-Heavy", size: 22.0)
         
-        self.highScoreLabel?.text = "🌟 high score: \(highScore!) 🌟"
+        //self.highScoreLabel?.text = "🌟 high score: \(highScore!) 🌟"
         dispatch_async(dispatch_get_main_queue()) {
             self.levelView!.bestScoreLabel.text = "\(highScore!)"
             self.levelView!.newScoreLabel.text = "\(self.scoreLabel!.text!)"
@@ -525,6 +844,13 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         gameCount = gameCount! + 1
         
+        let hasPlayedGame = NSUserDefaults.standardUserDefaults().objectForKey("hasPlayedGame")
+        if hasPlayedGame == nil {
+            
+        } else {
+            
+        }
+        
         
         //self.createAndLoadInterstitial()
         gameIsPlaying = true
@@ -534,7 +860,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         imageView.frame = CGRectMake(0, 0, self.view.frame.size.width, 200)
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
         imageView.center = self.view.center
-        self.view.addSubview(imageView)
+        //self.view.addSubview(imageView)
         
 //        let label = UILabel()
 //        label.text = "tap to smash\n" + "incoming trump bombs!\n\n" + "keep your phone centered!"
@@ -567,6 +893,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             self.blurEffectView!.alpha = 0.0
             self.highScoreLabel?.alpha = 0.0
             self.scrollView?.alpha = 0.0
+            self.liveLeaderBoardButton?.alpha = 0.0
             
         }) { (true) in
             UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
@@ -590,7 +917,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         dispatch_after(dispatchTime, dispatch_get_main_queue(), {
             // here code perfomed with delay
-            self.nodeTimer = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: #selector(ViewController.createBall), userInfo: nil, repeats: true)
+            self.nodeTimer = NSTimer.scheduledTimerWithTimeInterval(0.55, target: self, selector: #selector(ViewController.createBall), userInfo: nil, repeats: true)
         })
     }
     
@@ -615,7 +942,9 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
                 })
             }
         }
-        
+    
+        self.startButton.enabled = false
+        self.liveLeaderBoardButton?.enabled = false
         gameIsPlaying = false
         dispatch_async(dispatch_get_main_queue()) {
             UIView.animateWithDuration(0.14, animations: {
@@ -657,12 +986,17 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             NSUserDefaults.standardUserDefaults().setObject(currentScore!, forKey: "highScore")
             NSUserDefaults.standardUserDefaults().synchronize()
             
-//            PFUser.currentUser()!.setObject(highScore, forKey: "highScore")
-//            PFUser.currentUser()?.saveInBackground()
-//            print("gotttem")
-            
-            self.appDelegate?.currentUser?.setObject(highScore, forKey: "userHighScore")
-            self.appDelegate?.currentUser?.saveInBackground()
+            if self.appDelegate?.currentUser == nil {
+                // SHOW ERROR
+                print("ERRORROROR!")
+            } else {
+                
+                self.appDelegate?.currentUser?.setObject(highScore, forKey: "userHighScore")
+                self.appDelegate?.currentUser?.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    
+                }
+            }
             
             dispatch_async(dispatch_get_main_queue()) {
                 self.levelView!.bestScoreLabel.text = "\(currentScore!)"
@@ -691,6 +1025,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
                 self.startButton.transform = CGAffineTransformMakeScale(1.15, 1.15)
                 self.highScoreLabel?.alpha = 0.88
                 self.scrollView?.alpha = 1.0
+                self.liveLeaderBoardButton?.alpha = 0.80
             }) { (true) in
                 UIView.animateWithDuration(0.16, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
                     self.startButton.transform = CGAffineTransformMakeScale(1.0, 1.0)
@@ -713,6 +1048,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         dispatch_after(dispatchTime, dispatch_get_main_queue(), {
            self.removeAllNodes()
+            self.startButton.enabled = true
+            self.liveLeaderBoardButton?.enabled = true
         })
     
         nodeTimer?.invalidate()
@@ -724,13 +1061,25 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         //scene?.removeAllParticleSystems()
         scene!.rootNode.enumerateChildNodesUsingBlock { (node, stop) -> Void in
+            node.removeAllParticleSystems()
+            node.removeAllAnimations()
             node.removeFromParentNode()
+            self.boingBallNode = nil
+            self.pumpkin = nil
+            
         }
     }
     
     func createBall () {
         
-        for i in 1...1 {
+        var ballCount = 1;
+        
+        if tapCount > 3 {
+            ballCount = 2
+        }
+        
+        
+        for i in 1...ballCount {
             
             i
             let lowerx  = -8
@@ -743,11 +1092,18 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             
             // Create Ball
             let ball = SCNSphere(radius: 2.0)
-            //pumpkin = pumpkinScene?.rootNode.childNodeWithName("Pineapple", recursively: false)!
+            pumpkin = pumpkinScene?.rootNode.childNodeWithName("Sphere", recursively: false)!
             //let newNode = pumpkin!.copy() as! SCNNode;
-            boingBallNode = SCNNode(geometry: ball)
-            boingBallNode!.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
+            boingBallNode = pumpkin!.copy() as? SCNNode
+            pumpkin = nil
+            //boingBallNode = SCNNode(geometry: ball)
+            //boingBallNode!.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
             //scene!.rootNode.addChildNode(boingBallNode!)
+            
+//            let newNode = pumpkin!.copy() as! SCNNode;
+//            dasNode.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
+//            dasNode.addChildNode(newNode)
+//            scene!.rootNode.addChildNode(dasNode)
             
             // Fire particle system
             fire = SCNParticleSystem(named: "FireParticles", inDirectory: nil)
@@ -757,43 +1113,41 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             boingBallNode!.addParticleSystem(fire!)
             
             let spin = CABasicAnimation(keyPath: "rotation")
-            spin.fromValue = NSValue(SCNVector4: SCNVector4(x: 0, y: 1, z: 1, w: 0))
-            spin.toValue = NSValue(SCNVector4: SCNVector4(x: 0, y: 1, z: 1, w: Float(2 * M_PI)))
-            spin.duration = 3
+            spin.fromValue = NSValue(SCNVector4: SCNVector4(x: 0, y: 1, z: 0, w: 0))
+            spin.toValue = NSValue(SCNVector4: SCNVector4(x: 0, y: 1, z: 0, w: Float(2 * M_PI)))
+            spin.duration = 4
             spin.repeatCount = .infinity
             boingBallNode!.addAnimation(spin, forKey: "spin around")
 
 
-            let material = SCNMaterial()
-            material.specular.contents = UIColor.redColor()
-            material.diffuse.contents = UIColor.redColor()
-            material.shininess = 1.0
-            material.diffuse.contents = UIImage(named: "trump5")
-            ball.materials = [ material ]
+//            let material = SCNMaterial()
+//            material.specular.contents = UIColor.redColor()
+//            material.diffuse.contents = UIColor.redColor()
+//            material.shininess = 1.0
+//            material.diffuse.contents = UIImage(named: "trump5")
+//            ball.materials = [ material ]
             
-            let biggerBall = SCNSphere(radius: 1.5)
+            let biggerBall = SCNSphere(radius: 3.50)
             let dasNode = SCNNode(geometry: biggerBall)
             
             let material2 = SCNMaterial()
-            material2.specular.contents = UIColor.blueColor()
-            material2.diffuse.contents = UIColor.blueColor()
+            material2.specular.contents = UIColor.clearColor()
+            material2.diffuse.contents = UIColor.clearColor()
             material2.shininess = 1.0
             biggerBall.materials = [ material2 ]
             
-            //let newNode = boingBallNode!.copy() as! SCNNode;
+            let newNode = boingBallNode!.copy() as! SCNNode;
             dasNode.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
-            //dasNode.addChildNode(newNode)
-            scene!.rootNode.addChildNode(boingBallNode!)
-            
-            print(dasNode.childNodes)
-            
+            dasNode.addChildNode(newNode)
+            scene!.rootNode.addChildNode(dasNode)
+                        
             let lowerp  = -3
             let upperp  = 3
             let randomp = Int(arc4random_uniform(UInt32(upperp - lowerp + 1))) +   lowerp
             
             let position = SCNVector3(x: 0, y:Float(randomp), z:13)
             let action = SCNAction.moveTo(position, duration: 4)
-            boingBallNode!.runAction(action,completionHandler:{
+            dasNode.runAction(action,completionHandler:{
                 self.endGame()
             })
             
@@ -827,6 +1181,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             self.incrementScore()
             let result = hits[0]
             let tappedNode = result.node
+            
+
             
             // Tap Animation
             tappedNode.runAction(SCNAction.sequence([
@@ -964,10 +1320,10 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     }
     
     override func viewDidLayoutSubviews() {
-        let layer = self.cameraEngine.previewLayer
-        layer.frame = self.view.bounds
-        self.view.layer.insertSublayer(layer, atIndex: 0)
-        self.view.layer.masksToBounds = true
+//        let layer = self.cameraEngine.previewLayer
+//        layer.frame = self.view.bounds
+//        self.view.layer.insertSublayer(layer, atIndex: 0)
+//        self.view.layer.masksToBounds = true
     }
 
     override func didReceiveMemoryWarning() {

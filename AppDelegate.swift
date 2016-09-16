@@ -17,27 +17,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var currentUser : PFObject?
     var window: UIWindow?
-
+    var userLeftAppFromReviewButton : Bool?
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
-        
-        //FIRApp.configure()
-        
-//        let rootRef = FIRDatabase.database().reference()
-//        let userRef = rootRef.child("users")
-//        FIRAuth.auth()?.signInAnonymouslyWithCompletion() { (user, error) in
-//            // ...
-//            if error != nil {
-//                print(error?.description)
-//            } else {
-//                print(user)
-//                
-//                let theUser = FIRAuth.auth()?.currentUser
-//            }
-//        }
         
         
+        userLeftAppFromReviewButton = false
         Parse.setApplicationId("eMPiSiaCNRha0BAqkO88fGepRXaXFNASuaLo43Lj", clientKey: "gg9pkVb3VV3AKilnLkr4yswrLn5h6MIdzDpDNsHF")
         
         var highScore = NSUserDefaults.standardUserDefaults().objectForKey("highScore")
@@ -87,23 +72,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
         }
-    
         
-//        PFAnonymousUtils.logInWithBlock {
-//            (user: PFUser?, error: NSError?) -> Void in
-//            if error != nil || user == nil {
-//                print("Anonymous login failed.")
-//            } else {
-//                print("Anonymous user logged in.")
-//                user?.setObject(highScore!, forKey: "highScore")
-//                user?.incrementKey("runCount")
-//                user?.saveEventually()
-//                PFInstallation.currentInstallation()?.setObject(PFUser.currentUser()!, forKey: "user")
-//                PFInstallation.currentInstallation()?.saveInBackground()
-//            }
-//        }
-        
-        Chartboost.startWithAppId("57d5db9e04b01621d63b6c7c", appSignature: "422a784fa68d90bf333faaf9704fb06a758c093b", delegate: nil)
+        //Chartboost.startWithAppId("57d5db9e04b01621d63b6c7c", appSignature: "422a784fa68d90bf333faaf9704fb06a758c093b", delegate: nil)
         
         return true
     }
@@ -124,6 +94,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        
+        if userLeftAppFromReviewButton == true {
+            // Update user defaults
+            NSUserDefaults.standardUserDefaults().setObject("true", forKey: "hasReviewedApp")
+            NSUserDefaults.standardUserDefaults().synchronize()
+        }
+        
+        
     }
 
     func applicationWillTerminate(application: UIApplication) {

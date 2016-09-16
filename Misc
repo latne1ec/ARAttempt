@@ -88,3 +88,33 @@ self.view.addSubview(imageview)
 //            pumpkin = pumpkinScene?.rootNode.childNodeWithName("Pumpkin", recursively: false)!
 //            let newNode = pumpkin!.copy() as! SCNNode;
 //            scene!.rootNode.addChildNode(newNode)
+
+
+//FIRApp.configure()
+
+//        let rootRef = FIRDatabase.database().reference()
+//        let userRef = rootRef.child("users")
+//        FIRAuth.auth()?.signInAnonymouslyWithCompletion() { (user, error) in
+//            // ...
+//            if error != nil {
+//                print(error?.description)
+//            } else {
+//                print(user)
+//
+//                let theUser = FIRAuth.auth()?.currentUser
+//            }
+//        }
+
+//        PFAnonymousUtils.logInWithBlock {
+//            (user: PFUser?, error: NSError?) -> Void in
+//            if error != nil || user == nil {
+//                print("Anonymous login failed.")
+//            } else {
+//                print("Anonymous user logged in.")
+//                user?.setObject(highScore!, forKey: "highScore")
+//                user?.incrementKey("runCount")
+//                user?.saveEventually()
+//                PFInstallation.currentInstallation()?.setObject(PFUser.currentUser()!, forKey: "user")
+//                PFInstallation.currentInstallation()?.saveInBackground()
+//            }
+//        }
