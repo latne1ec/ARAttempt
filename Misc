@@ -118,3 +118,80 @@ self.view.addSubview(imageview)
 //                PFInstallation.currentInstallation()?.saveInBackground()
 //            }
 //        }
+
+let imageView = UIImageView()
+imageView.image = UIImage(named: "tut")
+imageView.frame = CGRectMake(0, 0, self.view.frame.size.width, 200)
+imageView.contentMode = UIViewContentMode.ScaleAspectFit
+imageView.center = self.view.center
+//self.view.addSubview(imageView)
+
+//        let label = UILabel()
+//        label.text = "tap to smash\n" + "incoming trump bombs!\n\n" + "keep your phone centered!"
+//        label.textColor = UIColor.whiteColor()
+//        label.numberOfLines = 4
+//        label.font = UIFont(name: "AvenirNext-Bold", size: 18)
+//        label.textAlignment = NSTextAlignment.Center
+//        label.frame = CGRectMake(0, 0, self.view.frame.size.width, 200)
+//        label.center = self.view.center
+//        self.view.addSubview(label)
+
+UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
+imageView.alpha = 0.68
+}) { (true) in
+UIView.animateWithDuration(0.15, delay: 1.4, options: UIViewAnimationOptions.TransitionNone, animations: {
+imageView.alpha = 0.0
+}) { (true) in
+}
+}
+
+
+//boingBallNode = SCNNode(geometry: ball)
+//boingBallNode!.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
+//scene!.rootNode.addChildNode(boingBallNode!)
+
+//            let newNode = pumpkin!.copy() as! SCNNode;
+//            dasNode.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
+//            dasNode.addChildNode(newNode)
+//            scene!.rootNode.addChildNode(dasNode)
+
+
+//        myUsernameLabel = UILabel()
+//        myUsernameLabel!.frame = CGRectMake(0, self.view.frame.size.height-80, self.view.frame.size.width, 50)
+//        let combinedString = "me: " + username
+//        myUsernameLabel!.text = combinedString
+//        myUsernameLabel!.font = UIFont(name: "AvenirNext-Bold", size: 16.0)
+//        myUsernameLabel!.textColor = UIColor.whiteColor()
+//        myUsernameLabel!.textAlignment = NSTextAlignment.Center
+//        //self.view.addSubview(myUsernameLabel)
+//        //self.view.bringSubviewToFront(myUsernameLabel)
+//        myUsernameLabel!.alpha = 0.0
+
+//        self.picker?.addSubview(myUsernameLabel!)
+//        self.picker?.bringSubviewToFront(myUsernameLabel!)
+
+//        UIView.animateWithDuration(0.2, delay: 0.55, options: UIViewAnimationOptions.TransitionNone, animations: {
+//            self.myUsernameLabel!.alpha = 1.0
+//            }) { (true) in
+//        }
+
+
+
+//        UIView.animateWithDuration(0.15, animations: {
+//            self.liveLeaderBoardButton?.alpha = 0.0
+//        }) { (true) in
+//        }
+
+//        let activityView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.White)
+//        activityView.frame = CGRectMake(self.view.frame.size.width/2-25, self.view.frame.size.height-84, 50, 50)
+//        activityView.startAnimating()
+//        self.view.addSubview(activityView)
+//        self.view.bringSubviewToFront(activityView)
+//
+//        liveLeaderBoardButton?.enabled = false
+
+
+
+
+
+

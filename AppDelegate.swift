@@ -21,7 +21,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
-        
         userLeftAppFromReviewButton = false
         Parse.setApplicationId("eMPiSiaCNRha0BAqkO88fGepRXaXFNASuaLo43Lj", clientKey: "gg9pkVb3VV3AKilnLkr4yswrLn5h6MIdzDpDNsHF")
         
@@ -48,6 +47,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     self.currentUser?.incrementKey("runCount")
                     self.currentUser?.setObject(highScore!, forKey: "userHighScore")
                     self.currentUser?.saveInBackground()
+                    
                 }
             }
             

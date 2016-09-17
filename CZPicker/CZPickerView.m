@@ -16,7 +16,6 @@
 #endif
 
 
-
 typedef void (^CZDismissCompletionCallback)(void);
 
 @interface CZPickerView ()
@@ -93,13 +92,28 @@ typedef void (^CZDismissCompletionCallback)(void);
     
     CGRect frame = self.containerView.frame;
     
-    
     self.containerView.frame = CGRectMake(frame.origin.x,
                                           frame.origin.y,
                                           frame.size.width,
                                           self.headerView.frame.size.height + self.tableView.frame.size.height + self.footerview.frame.size.height);
     self.containerView.center = CGPointMake(self.center.x, self.center.y + self.frame.size.height);
     
+    UILabel *lab = [[UILabel alloc] init];
+    
+    if ([UIScreen mainScreen].bounds.size.height == 568.0) {
+       lab.frame = CGRectMake(0, 25, self.superview.frame.size.width, 40);
+        lab.font = [UIFont fontWithName:@"AvenirNext-Bold" size:19];
+    } else {
+        lab.frame = CGRectMake(0, 50, self.superview.frame.size.width, 60);
+        lab.font = [UIFont fontWithName:@"AvenirNext-Bold" size:20];
+    }
+    
+    NSString *username = [[NSUserDefaults standardUserDefaults] objectForKey:@"username"];
+    lab.text = [NSString stringWithFormat:@"@%@",username];
+    lab.textColor = [UIColor whiteColor];
+    lab.alpha = 0.92;
+    lab.textAlignment = NSTextAlignmentCenter;
+    [self.backgroundDimmingView addSubview:lab];
 }
 
 - (void)performContainerAnimation {
@@ -250,6 +264,8 @@ typedef void (^CZDismissCompletionCallback)(void);
     UILabel *label = [[UILabel alloc] initWithFrame:view.frame];
     label.attributedText = at;
     [label sizeToFit];
+//    label.minimumScaleFactor = 8;
+//    label.adjustsFontSizeToFitWidth = true;
     [view addSubview:label];
     label.center = view.center;
     return view;

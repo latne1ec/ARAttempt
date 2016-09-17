@@ -6,6 +6,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <Parse/Parse.h>
 
 @class CZPickerView;
 
@@ -68,6 +69,9 @@
 
 /** show the picker */
 - (void)show;
+
+
+@property (nonatomic, strong) PFObject *currentUser;
 
 /** return previously selected row, in array of NSNumber form. */
 - (NSArray *)selectedRows;

@@ -40,7 +40,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     var tappableNode : SCNNode?
     var initialAttitude : CMAttitude?
     var scene : SCNScene?
-    var pumpkinScene : SCNScene?
+    var trumpScene : SCNScene?
     var pumpkin : SCNNode?
     var cameraNode : SCNNode?
     var fire : SCNParticleSystem?
@@ -60,6 +60,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     var bottomView : BottomView?
     var iPhone4StartButton : UIButton?
     var liveLeaderBoardButton : UIButton?
+    var myUsernameLabel : UILabel?
     
     var topArrow : UIImageView?
     var bottomArrow : UIImageView?
@@ -71,6 +72,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     var popup: GADInterstitial!
     var appDelegate : AppDelegate?
     var picker : CZPickerView?
+    
+    var tutorialView : TutorialView?
     
     var highScoreUsers : NSMutableArray?
     
@@ -122,8 +125,6 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         scene = SCNScene()
         scene?.physicsWorld.contactDelegate = self
         
-        pumpkinScene = SCNScene(named: "art.scnassets/TrumpBallFinal.scn")!
-        
         let newView = SCNView()
         newView.delegate = self
         newView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)
@@ -133,6 +134,11 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         self.scnView  = newView
         self.scnView!.delegate = self
         self.scnView!.playing = true
+        
+        //self.scnView?.gestureRecognizers = nil
+        let tap = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleTap(_:)))
+        self.scnView?.addGestureRecognizer(tap)
+
         
         // set scene to view
         self.scnView!.scene = scene
@@ -146,9 +152,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         self.view.addSubview(blurEffectView!)
         
         self.setupLabelsAndButtons()
-        
         self.createCamera()
-
         self.scoreLabel?.alpha = 0.0
         
         self.setupScrollViewAndLevels()
@@ -157,9 +161,103 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         self.getLeaderboardHighScores()
         
+        let hasPlayedGame = NSUserDefaults.standardUserDefaults().objectForKey("hasRanAppOnce")
+        if hasPlayedGame == nil {
+            
+            self.hideMenu()
+            self.showTutorial()
+            
+            NSUserDefaults.standardUserDefaults().setObject("yes", forKey: "hasRanAppOnce")
+            NSUserDefaults.standardUserDefaults().synchronize()
+
+        } else {
+            
+        }
+        
+    }
+    
+    func showTutorial () {
+        
+        // Show Tut View
+        self.tutorialView = (NSBundle.mainBundle().loadNibNamed("TutorialView", owner: self, options: nil)[0] as? TutorialView)!
+        self.tutorialView?.backgroundColor = UIColor.clearColor()
+        self.tutorialView!.frame = self.view.frame
+        self.view.addSubview(self.tutorialView!)
+        self.view.bringSubviewToFront(self.tutorialView!)
+        self.tutorialView?.alpha = 1.0
+        let tap = UITapGestureRecognizer(target: self, action: #selector(showMenu))
+        self.tutorialView?.addGestureRecognizer(tap)
+    }
+    
+    func hideTutorial () {
+        
+        if self.tutorialView != nil {
+            UIView.animateWithDuration(0.12, delay: 0.1, options: UIViewAnimationOptions.TransitionNone, animations: {
+                self.tutorialView?.alpha = 0.0
+            }) { (true) in
+            }
+        }
+    }
+    
+    func hideMenu () {
+        
+        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
+            
+            if self.iPhone4StartButton != nil {
+                self.iPhone4StartButton?.alpha = 0.0
+            }
+            self.startButton.transform = CGAffineTransformMakeScale(1.0, 1.0)
+            self.startButton.alpha = 0.0
+            self.blurEffectView!.alpha = 0.0
+            self.highScoreLabel?.alpha = 0.0
+            self.scrollView?.alpha = 0.0
+            self.liveLeaderBoardButton?.alpha = 0.0
+            
+        }) { (true) in
+            UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
+                self.startButton.alpha = 0.0
+                
+            }) { (true) in
+            }
+        }
+    }
+    
+    func showMenu () {
+        
+        self.hideTutorial()
+        
+        dispatch_async(dispatch_get_main_queue()) {
+            
+            UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
+                self.blurEffectView!.alpha = 1.0
+            }) { (true) in
+            }
+            
+            self.startButton.transform = CGAffineTransformMakeScale(0.0, 0.0)
+            self.startButton.alpha = 1.0
+            if self.iPhone4StartButton != nil {
+                self.iPhone4StartButton?.alpha = 1.0
+            }
+            UIView.animateWithDuration(0.15, delay: 0.80, options: UIViewAnimationOptions.TransitionNone, animations: {
+                self.startButton.transform = CGAffineTransformMakeScale(1.15, 1.15)
+                self.highScoreLabel?.alpha = 0.88
+                self.scrollView?.alpha = 1.0
+                self.liveLeaderBoardButton?.alpha = 0.80
+            }) { (true) in
+                UIView.animateWithDuration(0.16, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
+                    self.startButton.transform = CGAffineTransformMakeScale(1.0, 1.0)
+                    self.scoreLabel?.alpha = 0.0
+                    self.pageControl.alpha = 1.0
+                }) { (true) in
+                }
+            }
+        }
+
+        
     }
     
     override func viewDidAppear(animated: Bool) {
+        
         let bannerView = GADBannerView(adSize: kGADAdSizeSmartBannerPortrait)
         bannerView.delegate = self
         bannerView.adUnitID = "ca-app-pub-4115283290436108/3883521279"
@@ -229,7 +327,6 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         self.view.addSubview(self.scrollView!)
         self.view.bringSubviewToFront(self.scrollView!)
     
-    
         // for i in 0...1 {
         
         let width = self.scrollView?.frame.size.width
@@ -238,18 +335,23 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         //self.levelView!.frame = CGRectMake(width!*CGFloat(i)+50, 156, self.view.frame.size.width-100, self.scrollView!.frame.size.height/2+14)
     
         self.levelView!.frame = CGRectMake(50, 156, self.view.frame.size.width-100, self.scrollView!.frame.size.height/2+14)
+        
         if UIScreen.mainScreen().bounds.size.height < 568.0 {
             self.levelView!.frame = CGRectMake(50, 60, self.view.frame.size.width-100, self.scrollView!.frame.size.height/2+34)
         }
         if UIScreen.mainScreen().bounds.size.height == 568.0 {
             self.levelView!.frame = CGRectMake(50, 98, self.view.frame.size.width-100, self.scrollView!.frame.size.height/2+11)
         }
+        
+        if UIScreen.mainScreen().bounds.size.height > 667.0 {
+            self.levelView!.frame = CGRectMake(50, 175, self.view.frame.size.width-100, self.scrollView!.frame.size.height/2+14)
+        }
     
         self.levelView!.layer.cornerRadius = 20
         self.scrollView!.addSubview(self.levelView!)
     
         if UIScreen.mainScreen().bounds.size.height > 667.0 {
-            self.levelView!.currentLevelLabel.font = UIFont(name: "AvenirNext-Bold", size: 24)
+            self.levelView!.currentLevelLabel.font = UIFont(name: "AvenirNext-Bold", size: 23)
         }
     
         self.levelView?.shareButton.addTarget(self, action: #selector(shareMedia), forControlEvents: UIControlEvents.TouchUpInside)
@@ -306,7 +408,11 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         if UIScreen.mainScreen().bounds.size.height == 568.0 {
              sceneScrollView.frame = CGRectMake(self.view.frame.size.width/2-90, 12, 180, 180)
         }
-    
+        
+        if UIScreen.mainScreen().bounds.size.height > 667.0 {
+            sceneScrollView.frame = CGRectMake(self.view.frame.size.width/2-95, 82, 190, 190)
+        }
+        
         sceneScrollView.backgroundColor = UIColor.clearColor()
         
         
@@ -392,7 +498,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             
             liveLeaderBoardButton = UIButton()
             liveLeaderBoardButton!.frame = CGRectMake(0, self.view.frame.size.height-84, self.view.frame.size.width, 40)
-            liveLeaderBoardButton!.setTitle("high scores 🌟", forState: UIControlState.Normal)
+            liveLeaderBoardButton!.setTitle("high scores", forState: UIControlState.Normal)
             liveLeaderBoardButton!.titleLabel?.font = UIFont(name: "AvenirNext-Bold", size: 16.0)
 //            liveLeaderBoardButton!.setTitleColor(UIColor(red:0.98, green:0.39, blue:0.37, alpha:0.70), forState: UIControlState.Normal)
 //            liveLeaderBoardButton!.setTitleColor(UIColor(red:0.98, green:0.39, blue:0.37, alpha:0.25), forState: UIControlState.Highlighted)
@@ -404,6 +510,15 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             liveLeaderBoardButton?.alpha = 0.8
             self.view.addSubview(liveLeaderBoardButton!)
             self.view.bringSubviewToFront(liveLeaderBoardButton!)
+            
+//            let tutButton = UIButton()
+//            tutButton.frame = CGRectMake(self.view.frame.size.width-13, 5, 26, 26)
+//            tutButton.addTarget(self, action: #selector(showTutorial), forControlEvents: UIControlEvents.TouchUpInside)
+//            //tutButton.imageView?.image = UIImage(named: "tutButton")
+//            tutButton.titleLabel?.text = "ttttt"
+//            self.view.addSubview(tutButton)
+//            self.view.bringSubviewToFront(tutButton)
+
 
         }
         
@@ -454,6 +569,9 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
           return
         }
         
+        //let username = NSUserDefaults.standardUserDefaults().objectForKey("username") as! String
+        //let combinedString = "high scores | me: " + username
+        
         self.picker = CZPickerView(headerTitle: "high scores", cancelButtonTitle: "cancel", confirmButtonTitle: "confirm")
         self.picker!.delegate = self
         self.picker!.dataSource = self
@@ -462,22 +580,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     }
     
     func getLeaderboardHighScores () {
-        
-//        UIView.animateWithDuration(0.15, animations: {
-//            self.liveLeaderBoardButton?.alpha = 0.0
-//        }) { (true) in
-//        }
-
-//        let activityView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.White)
-//        activityView.frame = CGRectMake(self.view.frame.size.width/2-25, self.view.frame.size.height-84, 50, 50)
-//        activityView.startAnimating()
-//        self.view.addSubview(activityView)
-//        self.view.bringSubviewToFront(activityView)
-//        
-//        liveLeaderBoardButton?.enabled = false
-        
+            
         self.highScoreUsers = NSMutableArray()
-        
         let query = PFQuery(className: "CustomUser")
         query.whereKeyExists("username")
         query.orderByDescending("userHighScore")
@@ -820,6 +924,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         self.view.bringSubviewToFront(self.pageControl)
         
         //self.view.bringSubviewToFront(self.customLevelView)
+        
     }
 
     func shrinkButton () {
@@ -833,76 +938,14 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
     func growButton () {
         
         UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-            self.startButton.transform = CGAffineTransformMakeScale(1.16, 1.16)
+            self.startButton.transform = CGAffineTransformMakeScale(1.12, 1.12)
         }) { (true) in
         }
     }
     
     func startGame () {
         
-        appRunning = true
-        
-        gameCount = gameCount! + 1
-        
-        let hasPlayedGame = NSUserDefaults.standardUserDefaults().objectForKey("hasPlayedGame")
-        if hasPlayedGame == nil {
-            
-        } else {
-            
-        }
-        
-        
-        //self.createAndLoadInterstitial()
-        gameIsPlaying = true
-        
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "tut")
-        imageView.frame = CGRectMake(0, 0, self.view.frame.size.width, 200)
-        imageView.contentMode = UIViewContentMode.ScaleAspectFit
-        imageView.center = self.view.center
-        //self.view.addSubview(imageView)
-        
-//        let label = UILabel()
-//        label.text = "tap to smash\n" + "incoming trump bombs!\n\n" + "keep your phone centered!"
-//        label.textColor = UIColor.whiteColor()
-//        label.numberOfLines = 4
-//        label.font = UIFont(name: "AvenirNext-Bold", size: 18)
-//        label.textAlignment = NSTextAlignment.Center
-//        label.frame = CGRectMake(0, 0, self.view.frame.size.width, 200)
-//        label.center = self.view.center
-//        self.view.addSubview(label)
-    
-        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-            imageView.alpha = 0.68
-            }) { (true) in
-                UIView.animateWithDuration(0.15, delay: 1.4, options: UIViewAnimationOptions.TransitionNone, animations: {
-                    imageView.alpha = 0.0
-                }) { (true) in
-            }
-        }
-        
-        gameEnding = false;
-        
-        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-            
-            if self.iPhone4StartButton != nil {
-                self.iPhone4StartButton?.alpha = 0.0
-            }
-            self.startButton.transform = CGAffineTransformMakeScale(1.0, 1.0)
-            self.startButton.alpha = 0.0
-            self.blurEffectView!.alpha = 0.0
-            self.highScoreLabel?.alpha = 0.0
-            self.scrollView?.alpha = 0.0
-            self.liveLeaderBoardButton?.alpha = 0.0
-            
-        }) { (true) in
-            UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-                self.startButton.alpha = 0.0
-                
-            }) { (true) in
-            }
-        }
-        
+        self.hideMenu()
         self.removeAllNodes()
         self.sceneSetup()
         self.initialAttitude = nil
@@ -911,7 +954,20 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         self.scoreLabel?.text = "0"
         tapCount = 0
         
-        let seconds = 0.50
+        trumpScene = SCNScene(named: "art.scnassets/TrumpBallFinal.scn")!
+        self.startGameTimer()
+        
+        appRunning = true
+        gameCount = gameCount! + 1
+        gameIsPlaying = true
+        gameEnding = false;
+
+    
+    }
+    
+    func startGameTimer () {
+    
+        let seconds = 0.01
         let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
         let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
         
@@ -919,6 +975,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             // here code perfomed with delay
             self.nodeTimer = NSTimer.scheduledTimerWithTimeInterval(0.55, target: self, selector: #selector(ViewController.createBall), userInfo: nil, repeats: true)
         })
+
+        
     }
     
     func endGame () {
@@ -994,7 +1052,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
                 self.appDelegate?.currentUser?.setObject(highScore, forKey: "userHighScore")
                 self.appDelegate?.currentUser?.saveInBackgroundWithBlock {
                     (success: Bool, error: NSError?) -> Void in
-                    
+                    print("saved")
                 }
             }
             
@@ -1009,32 +1067,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             }
         }
         
-        dispatch_async(dispatch_get_main_queue()) {
-            
-            UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-                self.blurEffectView!.alpha = 1.0
-            }) { (true) in
-            }
-            
-            self.startButton.transform = CGAffineTransformMakeScale(0.0, 0.0)
-            self.startButton.alpha = 1.0
-            if self.iPhone4StartButton != nil {
-                self.iPhone4StartButton?.alpha = 1.0
-            }
-            UIView.animateWithDuration(0.15, delay: 0.80, options: UIViewAnimationOptions.TransitionNone, animations: {
-                self.startButton.transform = CGAffineTransformMakeScale(1.15, 1.15)
-                self.highScoreLabel?.alpha = 0.88
-                self.scrollView?.alpha = 1.0
-                self.liveLeaderBoardButton?.alpha = 0.80
-            }) { (true) in
-                UIView.animateWithDuration(0.16, delay: 0.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-                    self.startButton.transform = CGAffineTransformMakeScale(1.0, 1.0)
-                    self.scoreLabel?.alpha = 0.0
-                    self.pageControl.alpha = 1.0
-                }) { (true) in
-                }
-            }
-        }
+        self.showMenu()
         
         fire?.particleSize = 5
         fire?.emissionDuration = 2
@@ -1045,6 +1078,8 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         let seconds = 0.750
         let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
         let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
+        
+        trumpScene = nil
         
         dispatch_after(dispatchTime, dispatch_get_main_queue(), {
            self.removeAllNodes()
@@ -1092,18 +1127,10 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             
             // Create Ball
             let ball = SCNSphere(radius: 2.0)
-            pumpkin = pumpkinScene?.rootNode.childNodeWithName("Sphere", recursively: false)!
-            //let newNode = pumpkin!.copy() as! SCNNode;
+            pumpkin = trumpScene?.rootNode.childNodeWithName("Sphere", recursively: false)!
             boingBallNode = pumpkin!.copy() as? SCNNode
-            pumpkin = nil
             //boingBallNode = SCNNode(geometry: ball)
-            //boingBallNode!.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
-            //scene!.rootNode.addChildNode(boingBallNode!)
-            
-//            let newNode = pumpkin!.copy() as! SCNNode;
-//            dasNode.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
-//            dasNode.addChildNode(newNode)
-//            scene!.rootNode.addChildNode(dasNode)
+            pumpkin = nil
             
             // Fire particle system
             fire = SCNParticleSystem(named: "FireParticles", inDirectory: nil)
@@ -1118,14 +1145,6 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             spin.duration = 4
             spin.repeatCount = .infinity
             boingBallNode!.addAnimation(spin, forKey: "spin around")
-
-
-//            let material = SCNMaterial()
-//            material.specular.contents = UIColor.redColor()
-//            material.diffuse.contents = UIColor.redColor()
-//            material.shininess = 1.0
-//            material.diffuse.contents = UIImage(named: "trump5")
-//            ball.materials = [ material ]
             
             let biggerBall = SCNSphere(radius: 3.50)
             let dasNode = SCNNode(geometry: biggerBall)
@@ -1140,7 +1159,7 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             dasNode.position = SCNVector3(x: Float(randomx), y: Float(randomy), z: -120)
             dasNode.addChildNode(newNode)
             scene!.rootNode.addChildNode(dasNode)
-                        
+            
             let lowerp  = -3
             let upperp  = 3
             let randomp = Int(arc4random_uniform(UInt32(upperp - lowerp + 1))) +   lowerp
@@ -1160,10 +1179,6 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             animation2.duration = 5.0
             dasNode.addAnimation(animation2, forKey: "fly2")
             
-            //self.scnView?.gestureRecognizers = nil
-            let tap = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleTap(_:)))
-            self.scnView?.addGestureRecognizer(tap)
-            
         }
     }
     
@@ -1181,8 +1196,6 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
             self.incrementScore()
             let result = hits[0]
             let tappedNode = result.node
-            
-
             
             // Tap Animation
             tappedNode.runAction(SCNAction.sequence([
@@ -1284,13 +1297,13 @@ class ViewController: UIViewController, SCNSceneRendererDelegate, SCNPhysicsCont
         
         if (gameIsPlaying == true) {
             
-            if cameraNode?.eulerAngles.y > 0.14 {
+            if cameraNode?.eulerAngles.y > 0.23 {
                 self.view.bringSubviewToFront(rightArrow!)
                 UIView.animateWithDuration(0.14, animations: {
                     self.rightArrow?.alpha = 1.0
                 })
                 
-            } else if cameraNode?.eulerAngles.y < -0.14 {
+            } else if cameraNode?.eulerAngles.y < -0.23 {
                 self.view.bringSubviewToFront(leftArrow!)
                 UIView.animateWithDuration(0.14, animations: {
                     self.leftArrow?.alpha = 1.0
